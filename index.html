@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Generator using JavaScript</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: 'Roboto', sans-serif;
+	background-color: #f0f0f0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 20px;
+}
+
+.container {
+	background-color: #ffffff;
+	border-radius: 20px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+	padding: 40px;
+	width: 90%;
+	max-width: 600px;
+	text-align: center;
+}
+
+h1 {
+	font-size: 32px;
+	margin-bottom: 20px;
+	color: #333; /* Dark gray text */
+}
+
+.meme-generator {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.upload-input {
+	background-color: #f7f7f7; /* Light input background */
+	color: #333; /* Dark text */
+	padding: 12px;
+	border: 2px solid #ddd; /* Light border */
+	border-radius: 8px;
+	margin: 10px 0;
+	cursor: pointer;
+	transition: border-color 0.3s;
+}
+
+.upload-input:hover {
+	border-color: #007bff; /* Blue border on hover */
+}
+
+.text-input {
+	display: block;
+	width: 100%;
+	margin: 10px 0;
+	padding: 12px;
+	font-size: 16px;
+	border: 2px solid #ddd; /* Light border */
+	border-radius: 8px;
+	background-color: #f7f7f7; /* Light input background */
+	color: #333; /* Dark text */
+	transition: border-color 0.3s;
+}
+
+.text-input:focus {
+	border-color: #007bff; /* Blue border on focus */
+}
+
+.slider-label {
+	margin: 10px 0;
+	color: #333; /* Dark gray text */
+	font-size: 16px;
+}
+
+.slider {
+	-webkit-appearance: none;
+	width: 100%;
+	height: 8px;
+	background: #ddd; /* Light gray slider */
+	border-radius: 5px;
+	outline: none;
+	margin-bottom: 20px;
+}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 24px;
+	height: 24px;
+	background: #007bff; /* Blue thumb */
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+	width: 24px;
+	height: 24px;
+	background: #007bff; /* Blue thumb */
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.color-label {
+	margin: 10px 0;
+	color: #333; /* Dark gray text */
+	font-size: 16px;
+}
+
+.color-input {
+	margin: 10px 0;
+	padding: 12px;
+	border: 2px solid #ddd; /* Light border */
+	border-radius: 8px;
+	width: 100%;
+	background-color: #f7f7f7; /* Light input background */
+	color: #333; /* Dark text */
+}
+
+.canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin: 20px 0;
+	border: 2px solid #ddd; /* Light border */
+	border-radius: 12px;
+}
+
+.btn {
+	background-color: #007bff; /* Blue button */
+	color: #fff; /* White text */
+	padding: 12px 20px;
+	border: none;
+	border-radius: 8px;
+	font-size: 16px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	margin-top: 10px;
+}
+
+.btn:hover {
+	background-color: #0056b3; /* Darker blue on hover */
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Meme Generator</h1>
+        <div class="meme-generator">
+            <input type="file" id="imageUpload" accept="image/*" class="upload-input">
+            <input type="text" id="topText" placeholder="Top Text" class="text-input">
+            <input type="text" id="centerText" placeholder="Center Text" class="text-input">
+            <input type="text" id="bottomText" placeholder="Bottom Text" class="text-input">
+            <label class="color-label">Font Color:</label>
+            <input type="color" id="fontColor" value="#FFFFFF" class="color-input">
+            <label class="slider-label" for="fontSize">Font Size: <span id="fontSizeValue">50</span></label>
+            <input type="range" id="fontSize" min="10" max="100" value="50" class="slider">
+            <canvas id="memeCanvas" class="canvas"></canvas>
+            <button id="downloadMeme" class="btn">Download Meme</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+const memeCanvas = document.getElementById('memeCanvas');
+const topTextInput = document.getElementById('topText');
+const centerTextInput = document.getElementById('centerText');
+const bottomTextInput = document.getElementById('bottomText');
+const downloadMemeBtn = document.getElementById('downloadMeme');
+const fontSizeInput = document.getElementById('fontSize');
+const fontSizeValue = document.getElementById('fontSizeValue');
+const fontColorInput = document.getElementById('fontColor');
+const ctx = memeCanvas.getContext('2d');
+let uploadedImage;
+
+imageUpload.addEventListener('change', (event) => {
+    const reader = new FileReader();
+    reader.onload = function () {
+        const img = new Image();
+        img.onload = function () {
+            memeCanvas.width = img.width;
+            memeCanvas.height = img.height + 100;
+            ctx.drawImage(img, 0, 0);
+            uploadedImage = img;
+            drawText();
+        };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(event.target.files[0]);
+});
+
+topTextInput.addEventListener('input', drawText);
+centerTextInput.addEventListener('input', drawText);
+bottomTextInput.addEventListener('input', drawText);
+fontSizeInput.addEventListener('input', updateFontSize);
+fontColorInput.addEventListener('input', drawText);
+
+function updateFontSize() {
+    const fontSize = fontSizeInput.value;
+    fontSizeValue.textContent = fontSize;
+    drawText();
+}
+
+function drawText() {
+    if (!uploadedImage) return;
+    ctx.clearRect(0, 0, memeCanvas.width, memeCanvas.height);
+    ctx.drawImage(uploadedImage, 0, 0);
+
+    const fontSize = fontSizeInput.value;
+    ctx.fillStyle = fontColorInput.value;
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 4;
+    ctx.font = `${fontSize}px Impact`;
+    ctx.textAlign = 'center';
+
+    ctx.fillText(topTextInput.value.toUpperCase(), memeCanvas.width / 2, fontSize);
+    ctx.strokeText(topTextInput.value.toUpperCase(), memeCanvas.width / 2, fontSize);
+
+    ctx.fillText(centerTextInput.value.toUpperCase(), memeCanvas.width / 2, memeCanvas.height / 2);
+    ctx.strokeText(centerTextInput.value.toUpperCase(), memeCanvas.width / 2, memeCanvas.height / 2);
+
+    ctx.fillText(bottomTextInput.value.toUpperCase(), memeCanvas.width / 2, memeCanvas.height - 20);
+    ctx.strokeText(bottomTextInput.value.toUpperCase(), memeCanvas.width / 2, memeCanvas.height - 20);
+}
+
+downloadMemeBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.href = memeCanvas.toDataURL();
+    link.download = 'meme.png';
+    link.click();
+});
+    </script>
+</body>
+</html>
